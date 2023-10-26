@@ -5,7 +5,7 @@ import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author HuangJinhong
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -94,7 +94,7 @@ public class Model extends Observable {
         setChanged();
     }
 
-    /** Tilt the board toward SIDE. Return true iff this changes the board.
+    /** Tilt the board toward SIDE. Return true if this changes the board.
      *
      * 1. If two Tile objects are adjacent in the direction of motion and have
      *    the same value, they are merged into one Tile of twice the original
@@ -114,11 +114,59 @@ public class Model extends Observable {
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
 
+        // set new view (if press left, side is west, if press right, side is east and so on)
+        this.board.setViewingPerspective(side);
+        int length = this.board.size() - 1;
+        int maxRow = length;
+        for (int col = 0; col <= length; col++){
+            for (int row = length; row >= 0; row--){
+                // check
+                if (row == length){
+                    continue;
+                }
+                Tile t = this.board.tile(col, row);
+                if (t == null){
+                    continue;
+                }
+
+                // move
+                int moveRow = Model.getMoveRow(col, row, maxRow, this.board);
+                if (moveRow != row){
+                    // if merged, increase score
+                    // and maxRow sub 1 due to we CAN'T merge to a merged tile again
+                    if (board.move(col, moveRow, t)){
+                        this.score += this.board.tile(col, moveRow).value();
+                        maxRow -= 1;
+                    }
+                    changed = true;
+                }
+            }
+            // reset maxRow
+            maxRow = length;
+        }
+        // always set back to north
+        this.board.setViewingPerspective(Side.NORTH);
+
         checkGameOver();
         if (changed) {
             setChanged();
         }
         return changed;
+    }
+
+    public static int getMoveRow(int col, int row, int maxRow, Board b){
+        for (int moveRow = maxRow; moveRow >= 0; moveRow--){
+            // "up tile" is empty
+            if (b.tile(col, moveRow) == null){
+                return moveRow;
+            }
+            // same value("up tile" value equals current tile value)
+            if (b.tile(col, moveRow).value() == b.tile(col, row).value()){
+                return moveRow;
+            }
+        }
+        // can't move, return current row of current
+        return row;
     }
 
     /** Checks if the game is over and sets the gameOver variable
@@ -137,7 +185,13 @@ public class Model extends Observable {
      *  Empty spaces are stored as null.
      * */
     public static boolean emptySpaceExists(Board b) {
-        // TODO: Fill in this function.
+        for (int i = 0; i < b.size(); i++){
+            for (int j = 0; j < b.size(); j++){
+                if (b.tile(i, j) == null){
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -147,7 +201,17 @@ public class Model extends Observable {
      * given a Tile object t, we get its value with t.value().
      */
     public static boolean maxTileExists(Board b) {
-        // TODO: Fill in this function.
+        for (int i = 0; i < b.size(); i++){
+            for (int j = 0; j < b.size(); j++){
+                if (b.tile(i, j) == null){
+                    continue;
+                }
+                Tile t = b.tile(i, j);
+                if (t.value() == MAX_PIECE){
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -158,9 +222,62 @@ public class Model extends Observable {
      * 2. There are two adjacent tiles with the same value.
      */
     public static boolean atLeastOneMoveExists(Board b) {
-        // TODO: Fill in this function.
+        for (int i = 0; i < b.size(); i++){
+            for (int j = 0; j < b.size(); j++){
+                if (b.tile(i, j) == null){
+                    return true;
+                }
+                Tile t = b.tile(i, j);
+                Tile[] tiles = Model.fourDirectionValidTile(i, j, b);
+                // note: use "k" (not "i" or "j")as index and count below loop
+                for (int k = 0; k < tiles.length; k++){
+                    if (tiles[k] == null){
+                        continue;
+                    }
+                    if (tiles[k].value() == t.value()){
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     }
+
+    /** Return list that contains valid Tile*/
+    public static Tile[] fourDirectionValidTile(int col, int row, Board b){
+        Tile[] tiles = new Tile[4];
+        int cnt = 0;
+        int length = b.size();
+        if (Model.validIndex(col - 1 ,row ,length)){
+            tiles[cnt] = b.tile(col -1, row);
+            cnt += 1;
+        }
+        if (Model.validIndex(col + 1 ,row ,length)){
+            tiles[cnt] = b.tile(col + 1,row);
+            cnt += 1;
+        }
+        if (Model.validIndex(col ,row - 1 ,length)){
+            tiles[cnt] = b.tile(col ,row - 1);
+            cnt += 1;
+        }
+        if (Model.validIndex(col,row + 1 ,length)){
+            tiles[cnt] = b.tile(col,row + 1);
+        }
+        return tiles;
+    }
+
+    /** Return Ture if valid ,otherwise return false */
+    public static boolean validIndex(int col, int row, int length){
+        if (col < 0 || row < 0){
+            return false;
+        }
+        // note: list[4] from 0 to 3, so list[4] is impossible in list[4]
+        if (col >= length || row >= length){
+            return false;
+        }
+        return true;
+    }
+
 
 
     @Override

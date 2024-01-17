@@ -50,7 +50,7 @@ public class Repository implements Serializable {
 
     /* TODO: fill in the rest of this class. */
     /**Initialize a gitlet repository.*/
-    public static void init() throws IOException {
+    public static void init() {
         /** File structure to be initialized:
          *  +.gitlet
          *      +objects
@@ -66,19 +66,35 @@ public class Repository implements Serializable {
             EXCEPTION.gitletExistedException();
         }
         GITLET_DIR.mkdir();
-        join(GITLET_DIR, "HEAD").createNewFile();
+        try {
+            join(GITLET_DIR, "HEAD").createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         HEAD_DIR.mkdir();
-        join(HEAD_DIR, "master").createNewFile();
+        try {
+            join(HEAD_DIR, "master").createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         join(GITLET_DIR, "objects").mkdir();
         COMMIT_DIR.mkdir();
         BLOB_DIR.mkdir();
         ADD_DIR.mkdir();
         RM_DIR.mkdir();
         LOG_DIR.mkdir();
-        join(LOG_DIR, "master").createNewFile();
+        try {
+            join(LOG_DIR, "master").createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         Commit initialCommit = new Commit();
         String initialCommitSHA = initialCommit.getSHA();
-        join(COMMIT_DIR, initialCommitSHA).createNewFile();
+        try {
+            join(COMMIT_DIR, initialCommitSHA).createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         writeObject(join(COMMIT_DIR, initialCommitSHA), initialCommit);
         writeContents(join(LOG_DIR, "master"), initialCommit.toString());
         writeContents(join(HEAD_DIR, "master"), initialCommitSHA);
@@ -88,7 +104,7 @@ public class Repository implements Serializable {
     /** Add a file to the addstage.
      * @param fileName the name of the file to be added
      * */
-    public static void add(String fileName) throws IOException {
+    public static void add(String fileName) {
         /* if the file does not exist, throw an exception */
         if (!join(CWD, fileName).exists()) {
             EXCEPTION.notExistFileException();
@@ -105,7 +121,11 @@ public class Repository implements Serializable {
         if (currentTrackedBlobs != null) {
             if (!currentTrackedBlobs.containsValue(join(BLOB_DIR, blobSHA))) {
                 if (!join(ADD_DIR, blobSHA).exists()) {
-                    join(ADD_DIR, blobSHA).createNewFile();
+                    try {
+                        join(ADD_DIR, blobSHA).createNewFile();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     writeObject(join(ADD_DIR, blobSHA), blob);
                 }
             } else if (join(ADD_DIR, blobSHA).exists()) {
@@ -117,7 +137,11 @@ public class Repository implements Serializable {
             if (join(RM_DIR, blobSHA).exists()) {
                 join(RM_DIR, blobSHA).delete();
             } else {
-                join(ADD_DIR, blobSHA).createNewFile();
+                try {
+                    join(ADD_DIR, blobSHA).createNewFile();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 writeObject(join(ADD_DIR, blobSHA), blob);
             }
         }
@@ -126,7 +150,7 @@ public class Repository implements Serializable {
     /** Commit the files in the stage area to the current commit.
      * @param message the message of this commit
      * */
-    public static void commit(String message) throws IOException {
+    public static void commit(String message) {
         /* if there is no file in the addstage and rmstage, throw an exception */
         boolean hasAdd = ADD_DIR.list().length != 0;
         boolean hasRm = RM_DIR.list().length != 0;
@@ -149,7 +173,11 @@ public class Repository implements Serializable {
             for (File f : ADD_DIR.listFiles()) {
                 Blob b = readObject(f, Blob.class);
                 File blobFile = join(BLOB_DIR, b.getBlobSHA());
-                blobFile.createNewFile();
+                try {
+                    blobFile.createNewFile();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 writeObject(blobFile, b);
                 /* track only the latest version of the file */
                 if (blobs == null) {
@@ -171,7 +199,11 @@ public class Repository implements Serializable {
         /* create a new commit and write it to the commit directory */
         Commit newCommit = new Commit(message, parentCommit, blobs);
         String newCommitSHA = newCommit.getSHA();
-        join(COMMIT_DIR, newCommitSHA).createNewFile();
+        try {
+            join(COMMIT_DIR, newCommitSHA).createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         writeObject(join(COMMIT_DIR, newCommitSHA), newCommit);
         /* update the head commit of this branch and the log of this branch */
         String branchPath = readContentsAsString(join(GITLET_DIR, "HEAD"));
@@ -184,7 +216,7 @@ public class Repository implements Serializable {
     /** Remove a file from the current commit.
      * @param fileName the name of the file to be removed
      * */
-    public static void rm(String fileName) throws IOException {
+    public static void rm(String fileName) {
         String currentCommitPath = readContentsAsString(join(GITLET_DIR, "HEAD"));
         String currentCommitSHA = readContentsAsString(new File(currentCommitPath));
         Commit currentCommit = readObject(join(COMMIT_DIR, currentCommitSHA), Commit.class);
@@ -205,7 +237,11 @@ public class Repository implements Serializable {
             EXCEPTION.noNeedToRemoveException();
         } else if (currentTrackedBlobs.containsKey(fileName)) {
             Blob b = readObject(currentTrackedBlobs.get(fileName), Blob.class);
-            join(RM_DIR, b.getBlobSHA()).createNewFile();
+            try {
+                join(RM_DIR, b.getBlobSHA()).createNewFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             writeObject(join(RM_DIR, b.getBlobSHA()), b);
             if (join(CWD, fileName).exists()) {
                 join(CWD, fileName).delete();
@@ -214,30 +250,49 @@ public class Repository implements Serializable {
     }
 
     /** Print the log of this branch. */
-    public static void log() throws IOException {
+    public static void log() {
         /* find the current commit and the current branch */
         String currentCommitSHA = readContentsAsString(new File(readContentsAsString(join(GITLET_DIR, "HEAD"))));
         String branchPath = readContentsAsString(join(GITLET_DIR, "HEAD"));
         String branchName = branchPath.substring(branchPath.lastIndexOf(File.separator) + 1);
         /* print the log of this branch */
         Path branchLogPath = Paths.get(join(LOG_DIR, branchName).getPath());
-        BufferedReader reader = Files.newBufferedReader(branchLogPath);
+        BufferedReader reader = null;
+        try {
+            reader = Files.newBufferedReader(branchLogPath);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         String line;
         String prevLine = null;
-        while ((line = reader.readLine()) != null) { // read the whole log
+        while (true) {
+            try {
+                if (!((line = reader.readLine()) != null)) break;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } // read the whole log
             if (line.contains(currentCommitSHA)) { // print the log from the current commit to the initial commit
                 if (prevLine != null) {
                     System.out.println(prevLine);
                 }
                 System.out.println(line);
-                while ((line = reader.readLine()) != null) {
+                while (true) {
+                    try {
+                        if (!((line = reader.readLine()) != null)) break;
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     System.out.println(line);
                 }
                 break;
             }
             prevLine = line;
         }
-        reader.close();
+        try {
+            reader.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /** Print the global log of this repository. */
@@ -316,7 +371,7 @@ public class Repository implements Serializable {
     /** Checkout a branch or a file or a commit.
      * @param args the arguments
      * */
-    public static void checkout(String[] args) throws IOException {
+    public static void checkout(String[] args) {
         if (args.length == 2) {
             checkoutBranch(args[1]);
         } else if (args.length == 3) {
@@ -337,7 +392,7 @@ public class Repository implements Serializable {
     /** Checkout a branch with the given name.
      * @param branchName the name of the branch to be checked out
      * */
-    public static void checkoutBranch(String branchName) throws IOException {
+    public static void checkoutBranch(String branchName) {
         /* if the branch does not exist, throw an exception */
         File branchFile = join(HEAD_DIR, branchName);
         if (!branchFile.exists()) {
@@ -371,7 +426,7 @@ public class Repository implements Serializable {
      * @param currentTrackedBlobs the tracked blobs of the current commit
      * */
     private static void checkoutBranchHelper(TreeMap<String, File> branchTrackedBlobs,
-                                             TreeMap<String, File> currentTrackedBlobs) throws IOException {
+                                             TreeMap<String, File> currentTrackedBlobs) {
         if (branchTrackedBlobs != null) {
             for (String fileName : branchTrackedBlobs.keySet()) {
                 Blob b = readObject(branchTrackedBlobs.get(fileName), Blob.class);
@@ -383,7 +438,11 @@ public class Repository implements Serializable {
                 } else if (join(CWD, fileName).exists() && currentTrackedBlobs.containsKey(fileName)) {
                     writeContents(join(CWD, fileName), b.getFileContentAsString());
                 } else {
-                    join(CWD, fileName).createNewFile();
+                    try {
+                        join(CWD, fileName).createNewFile();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     writeContents(join(CWD, fileName), b.getFileContentAsString());
                 }
             }
@@ -418,7 +477,7 @@ public class Repository implements Serializable {
     /** Checkout a file with the given name.
      * @param fileName the name of the file to be checked out
      * */
-    public static void checkoutFile(String fileName) throws IOException {
+    public static void checkoutFile(String fileName) {
         String currentBranchPath = readContentsAsString(join(GITLET_DIR, "HEAD"));
         String currentCommitSHA = readContentsAsString(new File(currentBranchPath));
         Commit currentCommit = readObject(join(COMMIT_DIR, currentCommitSHA), Commit.class);
@@ -429,7 +488,7 @@ public class Repository implements Serializable {
      * @param commitID the ID of the commit
      * @param fileName the name of the file to be checked out
      * */
-    public static void checkoutCommit(String commitID, String fileName) throws IOException {
+    public static void checkoutCommit(String commitID, String fileName) {
         /* check if the commit exists, return the commit if it exists*/
         Commit commitToCheckOut = getCommit(commitID);
         checkoutCommitHelper(commitToCheckOut, fileName);
@@ -439,7 +498,7 @@ public class Repository implements Serializable {
      * @param commitToCheckOut the commit to be checked out
      * @param fileName the name of the file to be checked out
      * */
-    private static void checkoutCommitHelper(Commit commitToCheckOut, String fileName) throws IOException {
+    private static void checkoutCommitHelper(Commit commitToCheckOut, String fileName) {
         TreeMap<String, File> checkOutCommitBlobs = commitToCheckOut.getBlobs();
         /* check if the file is tracked by the commit */
         if (!checkOutCommitBlobs.containsKey(fileName)) {
@@ -451,7 +510,11 @@ public class Repository implements Serializable {
         if (join(CWD, fileName).exists()) {
             writeContents(join(CWD, fileName), b.getFileContentAsString());
         } else {
-            join(CWD, fileName).createNewFile();
+            try {
+                join(CWD, fileName).createNewFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             writeContents(join(CWD, fileName), b.getFileContentAsString());
         }
     }
@@ -476,19 +539,27 @@ public class Repository implements Serializable {
     /** Create a new branch with the given name.
      * @param branchName the name of the branch to be created
      * */
-    public static void branch(String branchName) throws IOException {
+    public static void branch(String branchName) {
         /* if the branch already exists, throw an exception */
         if (join(HEAD_DIR, branchName).exists()) {
             EXCEPTION.branchExistedException();
         } else {
-            join(HEAD_DIR, branchName).createNewFile();
+            try {
+                join(HEAD_DIR, branchName).createNewFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         /* find the current commit and write it to the new branch */
         String currentCommitPath = readContentsAsString(join(GITLET_DIR, "HEAD"));
         String currentCommitSHA = readContentsAsString(new File(currentCommitPath));
         writeContents(join(HEAD_DIR, branchName), currentCommitSHA);
         /* create a new log for this branch and inherit the log of the current branch */
-        join(LOG_DIR, branchName).createNewFile();
+        try {
+            join(LOG_DIR, branchName).createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         String currentBranchLog = currentCommitPath.substring(currentCommitPath.lastIndexOf(File.separator) + 1);
         writeContents(join(LOG_DIR, branchName), readContentsAsString(join(LOG_DIR, currentBranchLog)));
     }
@@ -514,7 +585,7 @@ public class Repository implements Serializable {
     /** Reset the current branch to the commit with the given ID.
      * @param commitID the ID of the commit to be reset to
      * */
-    public static void reset(String commitID) throws IOException {
+    public static void reset(String commitID) {
         Commit commitToReset = getCommit(commitID);
         String shaOfCommitToReset = commitToReset.getSHA();
         String currentBranchPath = readContentsAsString(join(GITLET_DIR, "HEAD"));
@@ -527,7 +598,7 @@ public class Repository implements Serializable {
         clearStage();
     }
 
-    public static void merge(String branchName) throws IOException {
+    public static void merge(String branchName) {
         checkBasicMergeFailures(branchName);
         String currentBranchPath = readContentsAsString(join(GITLET_DIR, "HEAD"));
         String currentCommitSHA = readContentsAsString(new File(currentBranchPath));
@@ -558,7 +629,11 @@ public class Repository implements Serializable {
         parents.add(currentCommit);
         parents.add(branchCommit);
         Commit mergedCommit = new Commit(mergedMessage, parents, mergedBlobs);
-        join(COMMIT_DIR, mergedCommit.getSHA()).createNewFile();
+        try {
+            join(COMMIT_DIR, mergedCommit.getSHA()).createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         /* write the merged commit to the commit directory */
         writeObject(join(COMMIT_DIR, mergedCommit.getSHA()), mergedCommit);
         /* update the head commit of this branch and the log of this branch */
@@ -607,7 +682,7 @@ public class Repository implements Serializable {
 
     private static TreeMap<String, File> mergeBlobs(TreeMap<String, File> splitPointBlobs,
                             TreeMap<String, File> currentCommitBlobs,
-                            TreeMap<String, File> branchCommitBlobs) throws IOException {
+                            TreeMap<String, File> branchCommitBlobs) {
         TreeMap<String, File> mergedBlobs = new TreeMap<>(currentCommitBlobs);
         boolean hasBlobsInSplitPoint = splitPointBlobs != null;
         if (hasBlobsInSplitPoint) {
@@ -680,14 +755,18 @@ public class Repository implements Serializable {
         return mergedBlobs;
     }
 
-    private static void createMergedFiles(TreeMap<String, File> mergedBlobs) throws IOException {
+    private static void createMergedFiles(TreeMap<String, File> mergedBlobs) {
         List<String> cwdFiles = plainFilenamesIn(CWD);
         for (String fileName : cwdFiles) {
            restrictedDelete(join(CWD, fileName));
         }
         for (String fileName : mergedBlobs.keySet()) {
             Blob b = readObject(mergedBlobs.get(fileName), Blob.class);
-            join(CWD, fileName).createNewFile();
+            try {
+                join(CWD, fileName).createNewFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             writeContents(join(CWD, fileName), b.getFileContentAsString());
         }
     }
@@ -695,7 +774,7 @@ public class Repository implements Serializable {
     private static TreeMap<String, File> writeConflictedBlob(String fileName,
                                                              String contentsOfCurrentBlob,
                                                              String contentsOfBranchBlob,
-                                                             TreeMap<String, File> mergedBlobs) throws IOException {
+                                                             TreeMap<String, File> mergedBlobs) {
         /* 1. create a new file in BLOB_DIR with the name of the fileName
          * 2. write the conflict contents to the new file
          * 3. create a new blob with the fileName and conflict contents
@@ -704,7 +783,11 @@ public class Repository implements Serializable {
          * 6. delete the file with the name of fileName in BLOB_DIR
          * 7. put the fileName and the new blob in the mergedBlobs
          */
-        join(BLOB_DIR, fileName).createNewFile();
+        try {
+            join(BLOB_DIR, fileName).createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         String conflictContents = "<<<<<<< HEAD\n" +
                 contentsOfCurrentBlob +
                 "=======\n" +
@@ -712,7 +795,11 @@ public class Repository implements Serializable {
                 ">>>>>>>\n";
         writeContents(join(BLOB_DIR, fileName), conflictContents);
         Blob conflictedBlob = new Blob(fileName, readContents(join(BLOB_DIR, fileName)));
-        join(BLOB_DIR, conflictedBlob.getBlobSHA()).createNewFile();
+        try {
+            join(BLOB_DIR, conflictedBlob.getBlobSHA()).createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         writeObject(join(BLOB_DIR, conflictedBlob.getBlobSHA()), conflictedBlob);
         join(BLOB_DIR, fileName).delete();
         mergedBlobs.put(fileName, join(BLOB_DIR, conflictedBlob.getBlobSHA()));

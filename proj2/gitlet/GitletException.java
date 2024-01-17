@@ -38,7 +38,8 @@ class GitletException extends RuntimeException {
     }
 
     public void gitletExistedException() {
-        System.out.println("A Gitlet version-control system already exists in the current directory.");
+        System.out.println("A Gitlet version-control system "
+                + "already exists in the current directory.");
         System.exit(0);
     }
 
@@ -78,7 +79,8 @@ class GitletException extends RuntimeException {
     }
 
     public void untrackedFileException() {
-        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+        System.out.println("There is an untracked file in the way; "
+                + "delete it, or add and commit it first.");
         System.exit(0);
     }
 

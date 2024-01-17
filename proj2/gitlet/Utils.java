@@ -20,7 +20,6 @@ import java.util.List;
 
 
 /** Assorted utilities.
- *
  * Give this file a good read as it provides several useful utility functions
  * to save you some time.
  *
@@ -138,7 +137,7 @@ class Utils {
 
     /** Return an object of type T read from FILE, casting it to EXPECTEDCLASS.
      *  Throws IllegalArgumentException in case of problems. */
-    static <T extends Serializable> T readObject(File file,
+    static<T extends Serializable> T readObject(File file,
                                                  Class<T> expectedClass) {
         try {
             ObjectInputStream in =
@@ -164,9 +163,12 @@ class Utils {
         new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                return new File(dir, name).isFile() &&
-                        !name.equals("gitlet-design.md") &&
-                        !name.equals("pom.xml") &&
+                return new File(dir, name).isFile()
+                        &&
+                        !name.equals("gitlet-design.md")
+                        &&
+                        !name.equals("pom.xml")
+                        &&
                         !name.equals("Makefile");
             }
         };

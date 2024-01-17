@@ -1,12 +1,11 @@
 package gitlet;
 
-// TODO: any imports you need here
 
 
 import java.io.File;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.util.Date; // TODO: You'll likely use this in this class
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.TreeMap;
@@ -14,14 +13,14 @@ import java.util.TreeMap;
 import static gitlet.Utils.*;
 
 /** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
+ *
  *  does at a high level.
  *
- *  @author TODO
+ *  @author Zhu Jiayou
  */
 public class Commit implements Serializable {
     /**
-     * TODO: add instance variables here.
+     *
      *
      * List all instance variables of the Commit class here with a useful
      * comment above them describing what that variable represents and how that
@@ -34,15 +33,16 @@ public class Commit implements Serializable {
     private String timestamp;
     /** The parent of this Commit. */
     private Commit parent;
-    /** The blobs of this Commit. The key is the file address (SHA), the value is the contents of the blob. */
+    /** The blobs of this Commit.
+     * The key is the file address (SHA),
+     * the value is the contents of the blob. */
     private TreeMap<String, File> blobs = new TreeMap<>();
-
+    /* The parents of this Commit. */
     private List<Commit> parents;
-
+    /* Whether this Commit is merged. */
     private boolean isMerged = false;
 
 
-    /* TODO: fill in the rest of this class. */
     /**Initialize a gitlet commit.*/
     public Commit() {
         this.message = "initial commit";
@@ -110,7 +110,8 @@ public class Commit implements Serializable {
     }
 
     private String formatDate(Date currentDate) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z", Locale.ENGLISH);
+        SimpleDateFormat dateFormat =
+                new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z", Locale.ENGLISH);
         String formattedDate = dateFormat.format(currentDate);
         return formattedDate;
     }

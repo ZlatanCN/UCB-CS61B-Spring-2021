@@ -1,10 +1,9 @@
 package gitlet;
 
-import java.io.IOException;
 import static gitlet.Repository.*;
 
 /** Driver class for Gitlet, a subset of the Git version-control system.
- *  @author TODO
+ *  @author Zhu Jiayou
  */
 public class Main {
 
@@ -16,19 +15,16 @@ public class Main {
             EXCEPTION.noArgsException();
         }
         String firstArg = args[0];
-        switch(firstArg) {
+        switch (firstArg) {
             case "init":
-                // TODO: handle the `init` command
                 validateNumArgs("init", args, 1);
                 init();
                 break;
             case "add":
-                // TODO: handle the `add [filename]` command
                 hasInitialized();
                 validateNumArgs("add", args, 2);
                 add(args[1]);
                 break;
-            // TODO: FILL THE REST IN
             case "commit":
                 hasInitialized();
                 validateNumArgs("commit", args, 2);

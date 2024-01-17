@@ -12,18 +12,14 @@ import java.util.*;
 
 import static gitlet.Utils.*;
 
-// TODO: any imports you need here
 
 /** Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
- *  @author TODO
+ *  @author Zhu Jiayou
  */
 public class Repository implements Serializable {
-    /**
-     * TODO: add instance variables here.
-     *
+    /*
      * List all instance variables of the Repository class here with a useful
      * comment above them describing what that variable represents and how that
      * variable is used. We've provided two examples for you.
@@ -48,7 +44,6 @@ public class Repository implements Serializable {
 
     public static final File LOG_DIR = join(GITLET_DIR, "logs");
 
-    /* TODO: fill in the rest of this class. */
     /**Initialize a gitlet repository.*/
     public static void init() {
         /** File structure to be initialized:
@@ -228,7 +223,8 @@ public class Repository implements Serializable {
             return b.getFileName();
         });
         /* if the file is in the addstage, remove it from the addstage
-         * if the file is in the current commit, add it to the rmstage, if the file is in the CWD, delete it
+         * if the file is in the current commit, add it to the rmstage,
+         * if the file is in the CWD, delete it
          * if the file is not in the addstage and the current commit, throw an exception */
         if (fileNameOfBlobs.contains(fileName)) {
             File addBlobFile = join(ADD_DIR, shaOfBlobs.get(fileNameOfBlobs.indexOf(fileName)));
@@ -252,9 +248,11 @@ public class Repository implements Serializable {
     /** Print the log of this branch. */
     public static void log() {
         /* find the current commit and the current branch */
-        String currentCommitSHA = readContentsAsString(new File(readContentsAsString(join(GITLET_DIR, "HEAD"))));
+        String currentCommitSHA = readContentsAsString(
+                new File(readContentsAsString(join(GITLET_DIR, "HEAD"))));
         String branchPath = readContentsAsString(join(GITLET_DIR, "HEAD"));
-        String branchName = branchPath.substring(branchPath.lastIndexOf(File.separator) + 1);
+        String branchName = branchPath.substring(
+                branchPath.lastIndexOf(File.separator) + 1);
         /* print the log of this branch */
         Path branchLogPath = Paths.get(join(LOG_DIR, branchName).getPath());
         BufferedReader reader = null;
@@ -267,18 +265,23 @@ public class Repository implements Serializable {
         String prevLine = null;
         while (true) {
             try {
-                if (!((line = reader.readLine()) != null)) break;
+                if (!((line = reader.readLine()) != null)) {
+                    break;
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             } // read the whole log
-            if (line.contains(currentCommitSHA)) { // print the log from the current commit to the initial commit
+            if (line.contains(currentCommitSHA)) {
+                // print the log from the current commit to the initial commit
                 if (prevLine != null) {
                     System.out.println(prevLine);
                 }
                 System.out.println(line);
                 while (true) {
                     try {
-                        if (!((line = reader.readLine()) != null)) break;
+                        if (!((line = reader.readLine()) != null)) {
+                            break;
+                        }
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -400,7 +403,8 @@ public class Repository implements Serializable {
         }
         /* if the branch is the current branch, throw an exception */
         String currentBranchPath = readContentsAsString(join(GITLET_DIR, "HEAD"));
-        String currentBranchName = currentBranchPath.substring(currentBranchPath.lastIndexOf(File.separator) + 1);
+        String currentBranchName = currentBranchPath.substring(
+                currentBranchPath.lastIndexOf(File.separator) + 1);
         if (currentBranchName.equals(branchName)) {
             EXCEPTION.inCurrentBranchException();
         }
@@ -431,9 +435,11 @@ public class Repository implements Serializable {
             for (String fileName : branchTrackedBlobs.keySet()) {
                 Blob b = readObject(branchTrackedBlobs.get(fileName), Blob.class);
                 /* if the file is in the CWD and tracked by current commit, update it.
-                 * if the file is in the CWD but not tracked by current commit, throw an exception.
+                 * if the file is in the CWD but not tracked by current commit,
+                 * throw an exception.
                  * if the file is not in the CWD, create it. */
-                if (join(CWD, fileName).exists() && (currentTrackedBlobs == null || !currentTrackedBlobs.containsKey(fileName))) {
+                if (join(CWD, fileName).exists()
+                        && (currentTrackedBlobs == null || !currentTrackedBlobs.containsKey(fileName))) {
                     EXCEPTION.untrackedFileException();
                 } else if (join(CWD, fileName).exists() && currentTrackedBlobs.containsKey(fileName)) {
                     writeContents(join(CWD, fileName), b.getFileContentAsString());
@@ -560,8 +566,10 @@ public class Repository implements Serializable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        String currentBranchLog = currentCommitPath.substring(currentCommitPath.lastIndexOf(File.separator) + 1);
-        writeContents(join(LOG_DIR, branchName), readContentsAsString(join(LOG_DIR, currentBranchLog)));
+        String currentBranchLog = currentCommitPath.substring(
+                currentCommitPath.lastIndexOf(File.separator) + 1);
+        writeContents(join(LOG_DIR, branchName),
+                readContentsAsString(join(LOG_DIR, currentBranchLog)));
     }
 
     /** Remove the branch with the given name.
@@ -573,7 +581,8 @@ public class Repository implements Serializable {
             EXCEPTION.notExistBranchNameException();
         }
         String currentBranchPath = readContentsAsString(join(GITLET_DIR, "HEAD"));
-        String currentBranchName = currentBranchPath.substring(currentBranchPath.lastIndexOf(File.separator) + 1);
+        String currentBranchName = currentBranchPath.substring(
+                currentBranchPath.lastIndexOf(File.separator) + 1);
         /* if the branch is the current branch, throw an exception */
         if (currentBranchName.equals(branchName)) {
             EXCEPTION.cannotRemoveCurrentBranchException();
@@ -618,12 +627,14 @@ public class Repository implements Serializable {
             System.out.println("Current branch fast-forwarded.");
             return;
         }
-        TreeMap <String, File> splitPointBlobs = splitPoint.getBlobs();
-        TreeMap <String, File> currentCommitBlobs = currentCommit.getBlobs();
-        TreeMap <String, File> branchCommitBlobs = branchCommit.getBlobs();
-        TreeMap <String, File> mergedBlobs = mergeBlobs(splitPointBlobs, currentCommitBlobs, branchCommitBlobs);
+        TreeMap<String, File> splitPointBlobs = splitPoint.getBlobs();
+        TreeMap<String, File> currentCommitBlobs = currentCommit.getBlobs();
+        TreeMap<String, File> branchCommitBlobs = branchCommit.getBlobs();
+        TreeMap<String, File> mergedBlobs =
+                mergeBlobs(splitPointBlobs, currentCommitBlobs, branchCommitBlobs);
         createMergedFiles(mergedBlobs);
-        String currentBranchName = currentBranchPath.substring(currentBranchPath.lastIndexOf(File.separator) + 1);
+        String currentBranchName = currentBranchPath.substring(
+                currentBranchPath.lastIndexOf(File.separator) + 1);
         String mergedMessage = "Merged " + branchName + " into " + currentBranchName + ".";
         List<Commit> parents = new ArrayList<>();
         parents.add(currentCommit);
@@ -652,7 +663,8 @@ public class Repository implements Serializable {
             EXCEPTION.notExistBranchNameException();
         }
         String currentBranchPath = readContentsAsString(join(GITLET_DIR, "HEAD"));
-        String currentBranchName = currentBranchPath.substring(currentBranchPath.lastIndexOf(File.separator) + 1);
+        String currentBranchName = currentBranchPath.substring(
+                currentBranchPath.lastIndexOf(File.separator) + 1);
         if (currentBranchName.equals(branchName)) {
             EXCEPTION.cannotMergeWithItselfException();
         }
@@ -690,10 +702,14 @@ public class Repository implements Serializable {
             for (String fileName : splitPointBlobs.keySet()) {
                 /* modified means the blob in split point is untracked by the target branch or
                  * the contents are not the same */
-                boolean isBlobInBranch = branchCommitBlobs != null && branchCommitBlobs.containsKey(fileName);
-                boolean isBlobModifiedInBranch = !isBlobInBranch || !branchCommitBlobs.get(fileName).equals(splitPointBlobs.get(fileName));
-                boolean isBlobInCurrent = currentCommitBlobs != null && currentCommitBlobs.containsKey(fileName);
-                boolean isBlobModifiedInCurrent = !isBlobInCurrent || !currentCommitBlobs.get(fileName).equals(splitPointBlobs.get(fileName));
+                boolean isBlobInBranch = branchCommitBlobs != null
+                        && branchCommitBlobs.containsKey(fileName);
+                boolean isBlobModifiedInBranch = !isBlobInBranch
+                        || !branchCommitBlobs.get(fileName).equals(splitPointBlobs.get(fileName));
+                boolean isBlobInCurrent = currentCommitBlobs != null
+                        && currentCommitBlobs.containsKey(fileName);
+                boolean isBlobModifiedInCurrent = !isBlobInCurrent
+                        || !currentCommitBlobs.get(fileName).equals(splitPointBlobs.get(fileName));
                 boolean onlyModifiedInBranch = isBlobModifiedInBranch && !isBlobModifiedInCurrent;
                 boolean modifiedInBoth = isBlobModifiedInBranch && isBlobModifiedInCurrent;
                 if (onlyModifiedInBranch) {
@@ -706,25 +722,29 @@ public class Repository implements Serializable {
                 if (modifiedInBoth) {
                     boolean isBlobInBoth = isBlobInBranch && isBlobInCurrent;
                     /* same means the blob is in both and the contents are the same */
-                    if (isBlobInBoth && !branchCommitBlobs.get(fileName).equals(currentCommitBlobs.get(fileName))) {
+                    if (isBlobInBoth
+                            && !branchCommitBlobs.get(fileName).equals(currentCommitBlobs.get(fileName))) {
                         System.out.println("Encountered a merge conflict.");
                         Blob currentBlob = readObject(currentCommitBlobs.get(fileName), Blob.class);
                         Blob branchBlob = readObject(branchCommitBlobs.get(fileName), Blob.class);
                         String contentsOfCurrentBlob = currentBlob.getFileContentAsString();
                         String contentsOfBranchBlob = branchBlob.getFileContentAsString();
-                        mergedBlobs = writeConflictedBlob(fileName, contentsOfCurrentBlob, contentsOfBranchBlob, mergedBlobs);
+                        mergedBlobs = writeConflictedBlob(
+                                fileName, contentsOfCurrentBlob, contentsOfBranchBlob, mergedBlobs);
                     } else if (isBlobInCurrent && !isBlobInBranch) {
                         System.out.println("Encountered a merge conflict.");
                         Blob currentBlob = readObject(currentCommitBlobs.get(fileName), Blob.class);
                         String contentsOfCurrentBlob = currentBlob.getFileContentAsString();
                         String contentsOfBranchBlob = "";
-                        mergedBlobs = writeConflictedBlob(fileName, contentsOfCurrentBlob, contentsOfBranchBlob, mergedBlobs);
+                        mergedBlobs = writeConflictedBlob(
+                                fileName, contentsOfCurrentBlob, contentsOfBranchBlob, mergedBlobs);
                     } else if (!isBlobInCurrent && isBlobInBranch) {
                         System.out.println("Encountered a merge conflict.");
                         Blob branchBlob = readObject(branchCommitBlobs.get(fileName), Blob.class);
                         String contentsOfCurrentBlob = "";
                         String contentsOfBranchBlob = branchBlob.getFileContentAsString();
-                        mergedBlobs = writeConflictedBlob(fileName, contentsOfCurrentBlob, contentsOfBranchBlob, mergedBlobs);
+                        mergedBlobs = writeConflictedBlob(
+                                fileName, contentsOfCurrentBlob, contentsOfBranchBlob, mergedBlobs);
                     }
                 }
             }
@@ -733,7 +753,8 @@ public class Repository implements Serializable {
                     if (!splitPointBlobs.containsKey(fileName) && !currentCommitBlobs.containsKey(fileName)) {
                         mergedBlobs.put(fileName, branchCommitBlobs.get(fileName));
                     }
-                    if (join(CWD, fileName).exists() && (currentCommitBlobs == null || !currentCommitBlobs.containsKey(fileName))) {
+                    if (join(CWD, fileName).exists()
+                            && (currentCommitBlobs == null || !currentCommitBlobs.containsKey(fileName))) {
                         EXCEPTION.untrackedFileException();
                     }
                 }
@@ -748,7 +769,8 @@ public class Repository implements Serializable {
                     Blob branchBlob = readObject(branchCommitBlobs.get(fileName), Blob.class);
                     String contentsOfCurrentBlob = currentBlob.getFileContentAsString();
                     String contentsOfBranchBlob = branchBlob.getFileContentAsString();
-                    mergedBlobs = writeConflictedBlob(fileName, contentsOfCurrentBlob, contentsOfBranchBlob, mergedBlobs);
+                    mergedBlobs = writeConflictedBlob(
+                            fileName, contentsOfCurrentBlob, contentsOfBranchBlob, mergedBlobs);
                 }
             }
         }
@@ -758,7 +780,7 @@ public class Repository implements Serializable {
     private static void createMergedFiles(TreeMap<String, File> mergedBlobs) {
         List<String> cwdFiles = plainFilenamesIn(CWD);
         for (String fileName : cwdFiles) {
-           restrictedDelete(join(CWD, fileName));
+            restrictedDelete(join(CWD, fileName));
         }
         for (String fileName : mergedBlobs.keySet()) {
             Blob b = readObject(mergedBlobs.get(fileName), Blob.class);
@@ -788,11 +810,11 @@ public class Repository implements Serializable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        String conflictContents = "<<<<<<< HEAD\n" +
-                contentsOfCurrentBlob +
-                "=======\n" +
-                contentsOfBranchBlob +
-                ">>>>>>>\n";
+        String conflictContents = "<<<<<<< HEAD\n"
+                + contentsOfCurrentBlob
+                + "=======\n"
+                + contentsOfBranchBlob
+                + ">>>>>>>\n";
         writeContents(join(BLOB_DIR, fileName), conflictContents);
         Blob conflictedBlob = new Blob(fileName, readContents(join(BLOB_DIR, fileName)));
         try {

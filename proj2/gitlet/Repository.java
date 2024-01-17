@@ -1,6 +1,5 @@
 package gitlet;
 
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -439,9 +438,11 @@ public class Repository implements Serializable {
                  * throw an exception.
                  * if the file is not in the CWD, create it. */
                 if (join(CWD, fileName).exists()
-                        && (currentTrackedBlobs == null || !currentTrackedBlobs.containsKey(fileName))) {
+                        && (currentTrackedBlobs == null
+                        || !currentTrackedBlobs.containsKey(fileName))) {
                     EXCEPTION.untrackedFileException();
-                } else if (join(CWD, fileName).exists() && currentTrackedBlobs.containsKey(fileName)) {
+                } else if (join(CWD, fileName).exists()
+                        && currentTrackedBlobs.containsKey(fileName)) {
                     writeContents(join(CWD, fileName), b.getFileContentAsString());
                 } else {
                     try {
@@ -607,6 +608,9 @@ public class Repository implements Serializable {
         clearStage();
     }
 
+    /** Merge the branch with the given name to the current branch.
+     * @param branchName the name of the branch to be merged
+     * */
     public static void merge(String branchName) {
         checkBasicMergeFailures(branchName);
         String currentBranchPath = readContentsAsString(join(GITLET_DIR, "HEAD"));
@@ -693,90 +697,123 @@ public class Repository implements Serializable {
     }
 
     private static TreeMap<String, File> mergeBlobs(TreeMap<String, File> splitPointBlobs,
-                            TreeMap<String, File> currentCommitBlobs,
-                            TreeMap<String, File> branchCommitBlobs) {
+                                                    TreeMap<String, File> currentCommitBlobs,
+                                                    TreeMap<String, File> branchCommitBlobs) {
         TreeMap<String, File> mergedBlobs = new TreeMap<>(currentCommitBlobs);
-        boolean hasBlobsInSplitPoint = splitPointBlobs != null;
-        if (hasBlobsInSplitPoint) {
-            /* iterate through the split point blobs */
-            for (String fileName : splitPointBlobs.keySet()) {
-                /* modified means the blob in split point is untracked by the target branch or
-                 * the contents are not the same */
-                boolean isBlobInBranch = branchCommitBlobs != null
-                        && branchCommitBlobs.containsKey(fileName);
-                boolean isBlobModifiedInBranch = !isBlobInBranch
-                        || !branchCommitBlobs.get(fileName).equals(splitPointBlobs.get(fileName));
-                boolean isBlobInCurrent = currentCommitBlobs != null
-                        && currentCommitBlobs.containsKey(fileName);
-                boolean isBlobModifiedInCurrent = !isBlobInCurrent
-                        || !currentCommitBlobs.get(fileName).equals(splitPointBlobs.get(fileName));
-                boolean onlyModifiedInBranch = isBlobModifiedInBranch && !isBlobModifiedInCurrent;
-                boolean modifiedInBoth = isBlobModifiedInBranch && isBlobModifiedInCurrent;
-                if (onlyModifiedInBranch) {
-                    if (!isBlobInBranch) {
-                        mergedBlobs.remove(fileName);
-                    } else {
-                        mergedBlobs.put(fileName, branchCommitBlobs.get(fileName));
-                    }
-                }
-                if (modifiedInBoth) {
-                    boolean isBlobInBoth = isBlobInBranch && isBlobInCurrent;
-                    /* same means the blob is in both and the contents are the same */
-                    if (isBlobInBoth
-                            && !branchCommitBlobs.get(fileName).equals(currentCommitBlobs.get(fileName))) {
-                        System.out.println("Encountered a merge conflict.");
-                        Blob currentBlob = readObject(currentCommitBlobs.get(fileName), Blob.class);
-                        Blob branchBlob = readObject(branchCommitBlobs.get(fileName), Blob.class);
-                        String contentsOfCurrentBlob = currentBlob.getFileContentAsString();
-                        String contentsOfBranchBlob = branchBlob.getFileContentAsString();
-                        mergedBlobs = writeConflictedBlob(
-                                fileName, contentsOfCurrentBlob, contentsOfBranchBlob, mergedBlobs);
-                    } else if (isBlobInCurrent && !isBlobInBranch) {
-                        System.out.println("Encountered a merge conflict.");
-                        Blob currentBlob = readObject(currentCommitBlobs.get(fileName), Blob.class);
-                        String contentsOfCurrentBlob = currentBlob.getFileContentAsString();
-                        String contentsOfBranchBlob = "";
-                        mergedBlobs = writeConflictedBlob(
-                                fileName, contentsOfCurrentBlob, contentsOfBranchBlob, mergedBlobs);
-                    } else if (!isBlobInCurrent && isBlobInBranch) {
-                        System.out.println("Encountered a merge conflict.");
-                        Blob branchBlob = readObject(branchCommitBlobs.get(fileName), Blob.class);
-                        String contentsOfCurrentBlob = "";
-                        String contentsOfBranchBlob = branchBlob.getFileContentAsString();
-                        mergedBlobs = writeConflictedBlob(
-                                fileName, contentsOfCurrentBlob, contentsOfBranchBlob, mergedBlobs);
-                    }
-                }
-            }
-            if (branchCommitBlobs != null) {
-                for (String fileName : branchCommitBlobs.keySet()) {
-                    if (!splitPointBlobs.containsKey(fileName) && !currentCommitBlobs.containsKey(fileName)) {
-                        mergedBlobs.put(fileName, branchCommitBlobs.get(fileName));
-                    }
-                    if (join(CWD, fileName).exists()
-                            && (currentCommitBlobs == null || !currentCommitBlobs.containsKey(fileName))) {
-                        EXCEPTION.untrackedFileException();
-                    }
-                }
-            }
+
+        if (splitPointBlobs != null) {
+            mergeSplitPointBlobs(splitPointBlobs, currentCommitBlobs,
+                    branchCommitBlobs, mergedBlobs);
         } else if (branchCommitBlobs != null) {
-            for (String fileName : branchCommitBlobs.keySet()) {
-                if (!currentCommitBlobs.containsKey(fileName)) {
-                    mergedBlobs.put(fileName, branchCommitBlobs.get(fileName));
-                } else if (!currentCommitBlobs.get(fileName).equals(branchCommitBlobs.get(fileName))) {
-                    System.out.println("Encountered a merge conflict.");
-                    Blob currentBlob = readObject(currentCommitBlobs.get(fileName), Blob.class);
-                    Blob branchBlob = readObject(branchCommitBlobs.get(fileName), Blob.class);
-                    String contentsOfCurrentBlob = currentBlob.getFileContentAsString();
-                    String contentsOfBranchBlob = branchBlob.getFileContentAsString();
-                    mergedBlobs = writeConflictedBlob(
-                            fileName, contentsOfCurrentBlob, contentsOfBranchBlob, mergedBlobs);
-                }
-            }
+            mergeBranchBlobs(currentCommitBlobs, branchCommitBlobs, mergedBlobs);
         }
+
         return mergedBlobs;
     }
 
+    private static void mergeSplitPointBlobs(TreeMap<String, File> splitPointBlobs,
+                                             TreeMap<String, File> currentCommitBlobs,
+                                             TreeMap<String, File> branchCommitBlobs,
+                                             TreeMap<String, File> mergedBlobs) {
+        for (String fileName : splitPointBlobs.keySet()) {
+            boolean isBlobInBranch = branchCommitBlobs != null
+                    && branchCommitBlobs.containsKey(fileName);
+            boolean isBlobModifiedInBranch = !isBlobInBranch
+                    || !branchCommitBlobs.get(fileName).equals(splitPointBlobs.get(fileName));
+            boolean isBlobInCurrent = currentCommitBlobs != null
+                    && currentCommitBlobs.containsKey(fileName);
+            boolean isBlobModifiedInCurrent = !isBlobInCurrent
+                    || !currentCommitBlobs.get(fileName).equals(splitPointBlobs.get(fileName));
+            boolean onlyModifiedInBranch = isBlobModifiedInBranch && !isBlobModifiedInCurrent;
+            boolean modifiedInBoth = isBlobModifiedInBranch && isBlobModifiedInCurrent;
+
+            if (onlyModifiedInBranch) {
+                updateMergedBlobs(mergedBlobs, isBlobInBranch, fileName, branchCommitBlobs);
+            } else if (modifiedInBoth) {
+                handleModifiedInBoth(mergedBlobs, fileName, isBlobInBranch,
+                        isBlobInCurrent, branchCommitBlobs, currentCommitBlobs);
+            }
+        }
+
+        handleUntrackedFiles(splitPointBlobs, currentCommitBlobs, branchCommitBlobs, mergedBlobs);
+    }
+
+    private static void updateMergedBlobs(TreeMap<String, File> mergedBlobs,
+                                          boolean isBlobInBranch,
+                                          String fileName,
+                                          TreeMap<String, File> branchCommitBlobs) {
+        if (!isBlobInBranch) {
+            mergedBlobs.remove(fileName);
+        } else {
+            mergedBlobs.put(fileName, branchCommitBlobs.get(fileName));
+        }
+    }
+
+    private static void handleModifiedInBoth(TreeMap<String, File> mergedBlobs,
+                                             String fileName,
+                                             boolean isBlobInBranch,
+                                             boolean isBlobInCurrent,
+                                             TreeMap<String, File> branchCommitBlobs,
+                                             TreeMap<String, File> currentCommitBlobs) {
+        boolean isBlobInBoth = isBlobInBranch && isBlobInCurrent;
+
+        if (isBlobInBoth && !branchCommitBlobs.get(fileName).equals(
+                currentCommitBlobs.get(fileName))) {
+            handleMergeConflict(mergedBlobs, fileName, currentCommitBlobs, branchCommitBlobs);
+        } else if (isBlobInCurrent && !isBlobInBranch) {
+            handleMergeConflict(mergedBlobs, fileName, currentCommitBlobs, null);
+        } else if (!isBlobInCurrent && isBlobInBranch) {
+            handleMergeConflict(mergedBlobs, fileName, null, branchCommitBlobs);
+        }
+    }
+
+    private static void handleMergeConflict(TreeMap<String, File> mergedBlobs,
+                                            String fileName,
+                                            TreeMap<String, File> currentCommitBlobs,
+                                            TreeMap<String, File> branchCommitBlobs) {
+        System.out.println("Encountered a merge conflict.");
+        String contentsOfCurrentBlob = (currentCommitBlobs != null) ? readObject(
+                currentCommitBlobs.get(fileName), Blob.class).getFileContentAsString() : "";
+        String contentsOfBranchBlob = (branchCommitBlobs != null) ? readObject(
+                branchCommitBlobs.get(fileName), Blob.class).getFileContentAsString() : "";
+        mergedBlobs = writeConflictedBlob(fileName, contentsOfCurrentBlob,
+                contentsOfBranchBlob, mergedBlobs);
+    }
+
+    private static void handleUntrackedFiles(TreeMap<String, File> splitPointBlobs,
+                                             TreeMap<String, File> currentCommitBlobs,
+                                             TreeMap<String, File> branchCommitBlobs,
+                                             TreeMap<String, File> mergedBlobs) {
+        if (branchCommitBlobs != null) {
+            for (String fileName : branchCommitBlobs.keySet()) {
+                if (!splitPointBlobs.containsKey(fileName)
+                        && !currentCommitBlobs.containsKey(fileName)) {
+                    mergedBlobs.put(fileName, branchCommitBlobs.get(fileName));
+                }
+                if (join(CWD, fileName).exists() && (currentCommitBlobs == null
+                        || !currentCommitBlobs.containsKey(fileName))) {
+                    EXCEPTION.untrackedFileException();
+                }
+            }
+        }
+    }
+
+    private static void mergeBranchBlobs(TreeMap<String, File> currentCommitBlobs,
+                                         TreeMap<String, File> branchCommitBlobs,
+                                         TreeMap<String, File> mergedBlobs) {
+        for (String fileName : branchCommitBlobs.keySet()) {
+            if (!currentCommitBlobs.containsKey(fileName)) {
+                mergedBlobs.put(fileName, branchCommitBlobs.get(fileName));
+            } else if (!currentCommitBlobs.get(fileName).equals(branchCommitBlobs.get(fileName))) {
+                handleMergeConflict(mergedBlobs, fileName, currentCommitBlobs, branchCommitBlobs);
+            }
+        }
+    }
+
+
+    /** Create the merged files in the CWD.
+     * @param mergedBlobs the merged blobs
+     * */
     private static void createMergedFiles(TreeMap<String, File> mergedBlobs) {
         List<String> cwdFiles = plainFilenamesIn(CWD);
         for (String fileName : cwdFiles) {
@@ -793,6 +830,13 @@ public class Repository implements Serializable {
         }
     }
 
+    /** Write the conflicted blob to the CWD.
+     * @param fileName the name of the conflicted blob
+     * @param contentsOfCurrentBlob the contents of the current blob
+     * @param contentsOfBranchBlob the contents of the branch blob
+     * @param mergedBlobs the merged blobs
+     * @return the merged blobs
+     * */
     private static TreeMap<String, File> writeConflictedBlob(String fileName,
                                                              String contentsOfCurrentBlob,
                                                              String contentsOfBranchBlob,

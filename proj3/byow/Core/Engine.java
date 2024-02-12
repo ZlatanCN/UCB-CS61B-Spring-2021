@@ -13,8 +13,7 @@ public class Engine {
     public static final int HEIGHT = 51;
 
     public Engine() {
-        // initialize the TERenderer
-        ter.initialize(WIDTH, HEIGHT);
+        //ter.initialize(WIDTH, HEIGHT);
     }
 
     /**
@@ -134,13 +133,13 @@ public class Engine {
         }
         World world = new World(WIDTH, HEIGHT, input);
         TETile[][] finalWorldFrame = world.generateCompleteWorld();
-        ter.renderFrame(world.getWorld());
+        //ter.renderFrame(world.getWorld());
         return finalWorldFrame;
     }
 
     public static void main(String[] args) {
         Engine engine = new Engine();
-        //engine.interactWithInputString("lwwww");
-        engine.interactWithKeyboard();
+        engine.interactWithInputString("lwwww");
+        //engine.interactWithKeyboard();
     }
 }

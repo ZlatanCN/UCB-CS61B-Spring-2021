@@ -62,7 +62,7 @@ public class Maze {
                     int count = 0;
                     for (Point neighbor : neighbors.values()) {
                         if (neighbor.isType(Tileset.NOTHING)) {
-                        count += 1;
+                            count += 1;
                         }
                     }
                     if (count >= 3) {

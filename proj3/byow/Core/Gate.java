@@ -10,8 +10,8 @@ import java.util.TreeMap;
 
 public class Gate extends Point {
     private static final TETile TYPE = Tileset.LOCKED_DOOR;
-    private static final ArrayList<Gate> connectedGates = new ArrayList<>();
-    private static final ArrayList<Point> drawnGates = new ArrayList<>();
+    private static final ArrayList<Gate> CONNECTED_GATES = new ArrayList<>();
+    private static final ArrayList<Point> DRAWN_GATES = new ArrayList<>();
 
     public Gate(int x, int y) {
         super(x, y, TYPE);
@@ -77,13 +77,17 @@ public class Gate extends Point {
         Point east = point.getFourNeighbors(world).get("east");
         Point north = point.getFourNeighbors(world).get("north");
 
-        while (isPossibleGate(world, east) && !isConnected(east) && east.isType(Tileset.NOTHING)) {
+        while (isPossibleGate(world, east)
+                && !isConnected(east)
+                && east.isType(Tileset.NOTHING)) {
             adjacentGates.add(new Gate(east.getX(), east.getY()));
             connect(east);
             east = east.getFourNeighbors(world).get("east");
         }
 
-        while (isPossibleGate(world, north) && !isConnected(north) && north.isType(Tileset.NOTHING)) {
+        while (isPossibleGate(world, north)
+                && !isConnected(north)
+                && north.isType(Tileset.NOTHING)) {
             adjacentGates.add(new Gate(north.getX(), north.getY()));
             connect(north);
             north = north.getFourNeighbors(world).get("north");
@@ -93,12 +97,12 @@ public class Gate extends Point {
     }
 
     private void connect() {
-        connectedGates.add(this);
+        CONNECTED_GATES.add(this);
     }
 
     private static boolean isConnected(Point point) {
         Gate gate = new Gate(point.getX(), point.getY());
-        return connectedGates.contains(gate);
+        return CONNECTED_GATES.contains(gate);
     }
 
     private static void connect(Point point) {
@@ -112,16 +116,16 @@ public class Gate extends Point {
     }
 
     public static Point getRandomGate(Random rand) {
-        int randomIndex = rand.nextInt(drawnGates.size());
-        return drawnGates.get(randomIndex);
+        int randomIndex = rand.nextInt(DRAWN_GATES.size());
+        return DRAWN_GATES.get(randomIndex);
     }
 
     public static void addDrawnGates(Point gate) {
-        drawnGates.add(gate);
+        DRAWN_GATES.add(gate);
     }
 
     public static void clear() {
-        connectedGates.clear();
-        drawnGates.clear();
+        CONNECTED_GATES.clear();
+        DRAWN_GATES.clear();
     }
 }

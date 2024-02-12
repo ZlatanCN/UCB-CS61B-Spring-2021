@@ -30,9 +30,9 @@ public class Point {
         return neighbors;
     }
 
-    public void curveTo(TETile[][] world, TETile type) {
-        world[x][y] = type;
-        this.type = type;
+    public void curveTo(TETile[][] world, TETile curveType) {
+        world[x][y] = curveType;
+        this.type = curveType;
     }
 
     /** Get the point at (x, y) in the world. Return null if the point is out of bound. */
@@ -46,7 +46,7 @@ public class Point {
     }
 
     public TETile getType() {
-        return type;
+        return this.type;
     }
 
     public void visit() {
@@ -59,18 +59,6 @@ public class Point {
 
     public boolean isType(TETile type) {
         return this.type.equals(type);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        }
-        if (!(o instanceof Point)) {
-            return false;
-        }
-        Point p = (Point) o;
-        return p.x == x && p.y == y;
     }
 
     public int getX() {

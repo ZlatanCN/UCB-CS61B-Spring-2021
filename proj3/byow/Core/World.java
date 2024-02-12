@@ -34,13 +34,13 @@ public class World {
     }
 
     private String extractAction(String input) {
-        input = input.toLowerCase();
-        StringBuilder action = new StringBuilder();
+        String theInput = input.toLowerCase();
+        StringBuilder theAction = new StringBuilder();
         int startIndex = input.indexOf("s") + 1;
         for (int i = startIndex; i < input.length(); i++) {
-            action.append(input.charAt(i));
+            theAction.append(theInput.charAt(i));
         }
-        return action.toString();
+        return theAction.toString();
     }
 
     public void createWorld() {
@@ -79,10 +79,10 @@ public class World {
      * 3. Draw room at x and y
      */
     public void generateRooms() {
-        Random rand = new Random(getSeed());
+        Random myRand = new Random(getSeed());
         for (int i = 0; i < MAX_SEARCH_TIMES; i++) {
-            int x = Utils.getRandomX(rand, this);
-            int y = Utils.getRandomY(rand, this);
+            int x = Utils.getRandomX(myRand, this);
+            int y = Utils.getRandomY(myRand, this);
             Room.drawRoom(this, x, y);
         }
     }

@@ -57,8 +57,8 @@ public class Point {
         return isVisited;
     }
 
-    public boolean isType(TETile type) {
-        return this.type.equals(type);
+    public boolean isType(TETile typeToCompare) {
+        return this.type.equals(typeToCompare);
     }
 
     public int getX() {

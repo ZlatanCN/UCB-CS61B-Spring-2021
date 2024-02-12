@@ -33,11 +33,11 @@ public class World {
         this.input = input;
     }
 
-    private String extractAction(String input) {
-        String theInput = input.toLowerCase();
+    private String extractAction(String myInput) {
+        String theInput = myInput.toLowerCase();
         StringBuilder theAction = new StringBuilder();
-        int startIndex = input.indexOf("s") + 1;
-        for (int i = startIndex; i < input.length(); i++) {
+        int startIndex = myInput.indexOf("s") + 1;
+        for (int i = startIndex; i < myInput.length(); i++) {
             theAction.append(theInput.charAt(i));
         }
         return theAction.toString();

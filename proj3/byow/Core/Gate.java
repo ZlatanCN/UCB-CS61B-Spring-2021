@@ -10,8 +10,8 @@ import java.util.TreeMap;
 
 public class Gate extends Point {
     private static final TETile TYPE = Tileset.LOCKED_DOOR;
-    private static ArrayList<Gate> connectedGates = new ArrayList<>();
-    private static ArrayList<Point> drawedGates = new ArrayList<>();
+    private static final ArrayList<Gate> connectedGates = new ArrayList<>();
+    private static final ArrayList<Point> drawnGates = new ArrayList<>();
 
     public Gate(int x, int y) {
         super(x, y, TYPE);
@@ -112,11 +112,16 @@ public class Gate extends Point {
     }
 
     public static Point getRandomGate(Random rand) {
-        int randomIndex = rand.nextInt(drawedGates.size());
-        return drawedGates.get(randomIndex);
+        int randomIndex = rand.nextInt(drawnGates.size());
+        return drawnGates.get(randomIndex);
     }
 
     public static void addDrawnGates(Point gate) {
-        drawedGates.add(gate);
+        drawnGates.add(gate);
+    }
+
+    public static void clear() {
+        connectedGates.clear();
+        drawnGates.clear();
     }
 }

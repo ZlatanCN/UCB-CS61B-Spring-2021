@@ -139,7 +139,8 @@ public class Engine {
 
     public static void main(String[] args) {
         Engine engine = new Engine();
-        engine.interactWithInputString("lwwww");
+        TETile[][] myWorld = engine.interactWithInputString("n5197880843569031643s");
+        System.out.println(myWorld.equals(engine.interactWithInputString("n5197880843569031643s")));
         //engine.interactWithKeyboard();
     }
 }

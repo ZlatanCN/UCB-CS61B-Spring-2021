@@ -116,6 +116,7 @@ public class World {
      * 3. Iterate the "vector", randomly choose a gate and draw it.
      */
     public void generateGates() {
+        Gate.clear();
         List<ArrayList<Gate>> possibleGates = Gate.generatePossibleGates(this);
         for (ArrayList<Gate> adjacentGates : possibleGates) {
             int randomIndex = rand.nextInt(adjacentGates.size());

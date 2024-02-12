@@ -2,18 +2,99 @@ package byow.Core;
 
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
+import edu.princeton.cs.introcs.StdDraw;
+
+import java.io.File;
 
 public class Engine {
     TERenderer ter = new TERenderer();
     /* Feel free to change the width and height. */
-    public static final int WIDTH = 80;
-    public static final int HEIGHT = 30;
+    public static final int WIDTH = 81;
+    public static final int HEIGHT = 51;
+
+    public Engine() {
+        // initialize the TERenderer
+        ter.initialize(WIDTH, HEIGHT);
+    }
 
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
      * including inputs from the main menu.
      */
     public void interactWithKeyboard() {
+        drawMenu();
+        char key = ' ';
+        String seed = "";
+        while (true) {
+            if (StdDraw.hasNextKeyTyped()) {
+                key = StdDraw.nextKeyTyped();
+                if (key == 'n' || key == 'N') {
+                    seed = drawNewGame();
+                    break;
+                } else if (key == 'l' || key == 'L') {
+                    drawLoadGame();
+                    seed = Utils.readContentsAsString(Utils.join("byow/Core", "save.txt"));
+                    break;
+                } else if (key == 'q' || key == 'Q') {
+                    System.exit(0);
+                }
+            }
+        }
+        TETile[][] myWorld = interactWithInputString(seed);
+        StringBuilder input = new StringBuilder(seed);
+        Avatar avatar = Avatar.getAvatar(myWorld);
+        while (true) {
+            if (StdDraw.hasNextKeyTyped()) {
+                char action = StdDraw.nextKeyTyped();
+                if (action == 'q') {
+                    File save = Utils.join("byow/Core", "save.txt");
+                    Utils.writeContents(save, input.toString());
+                    System.exit(0);
+                }
+                avatar.moveTo(action, myWorld);
+                input.append(action);
+            }
+            ter.renderFrame(myWorld);
+        }
+    }
+
+    private void drawMenu() {
+        StdDraw.clear(StdDraw.BLACK);
+        StdDraw.setPenColor(StdDraw.WHITE);
+        StdDraw.text(WIDTH / 2, HEIGHT * 3 / 4, "CS61B: Build Your Own World (BYOW)");
+        StdDraw.text(WIDTH / 2, HEIGHT / 2, "New Game (N)");
+        StdDraw.text(WIDTH / 2, HEIGHT / 2 - 2, "Load Game (L)");
+        StdDraw.text(WIDTH / 2, HEIGHT / 2 - 4, "Quit (Q)");
+        StdDraw.show();
+    }
+
+    private String drawNewGame() {
+        StdDraw.setPenColor(StdDraw.WHITE);
+        StdDraw.clear(StdDraw.BLACK);
+        StdDraw.text(WIDTH / 2, HEIGHT / 2, "Please enter a seed followed by 'S'");
+        StdDraw.show();
+        StringBuilder seed = new StringBuilder();
+        char key = ' ';
+        while (key != 's' && key != 'S') {
+            if (StdDraw.hasNextKeyTyped()) {
+                key = StdDraw.nextKeyTyped();
+                seed.append(key);
+                StdDraw.clear(StdDraw.BLACK);
+                StdDraw.text(WIDTH / 2, HEIGHT / 2, "Please enter a seed followed by 'S'");
+                StdDraw.text(WIDTH / 2, HEIGHT / 2 - 2, seed.toString());
+                StdDraw.show();
+                StdDraw.pause(500);
+            }
+        }
+        return "N" + seed.toString();
+    }
+
+    private void drawLoadGame() {
+        StdDraw.setPenColor(StdDraw.WHITE);
+        StdDraw.clear(StdDraw.BLACK);
+        StdDraw.text(WIDTH / 2, HEIGHT / 2, "Loading last game...");
+        StdDraw.show();
+        StdDraw.pause(1000);
     }
 
     /**
@@ -38,15 +119,28 @@ public class Engine {
      * @return the 2D TETile[][] representing the state of the world
      */
     public TETile[][] interactWithInputString(String input) {
-        // TODO: Fill out this method so that it run the engine using the input
         // passed in as an argument, and return a 2D tile representation of the
         // world that would have been drawn if the same inputs had been given
         // to interactWithKeyboard().
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
-
-        TETile[][] finalWorldFrame = null;
+        if (input.charAt(0) == 'L' || input.charAt(0) == 'l') {
+            File oldWorld = Utils.join("byow/Core", "save.txt");
+            if (!oldWorld.exists() || oldWorld.length() == 0) {
+                System.exit(0);
+            }
+            input = Utils.readContentsAsString(oldWorld) + input.substring(1);
+        }
+        World world = new World(WIDTH, HEIGHT, input);
+        TETile[][] finalWorldFrame = world.generateCompleteWorld();
+        ter.renderFrame(world.getWorld());
         return finalWorldFrame;
+    }
+
+    public static void main(String[] args) {
+        Engine engine = new Engine();
+        //engine.interactWithInputString("lwwww");
+        engine.interactWithKeyboard();
     }
 }

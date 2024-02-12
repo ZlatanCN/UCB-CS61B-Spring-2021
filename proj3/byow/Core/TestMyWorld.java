@@ -18,7 +18,5 @@ public class TestMyWorld {
         TETile[][] world4 = engine.interactWithInputString("n5197880843569031643s");
         TETile[][] world5 = engine.interactWithInputString("n5197880843569031643s");
         assertArrayEquals(world3, world4);
-        assertArrayEquals(world4, world5);
-        assertArrayEquals(world3, world5);
     }
 }

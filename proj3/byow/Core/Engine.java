@@ -124,6 +124,7 @@ public class Engine {
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
+        Gate.clear();
         if (input.charAt(0) == 'L' || input.charAt(0) == 'l') {
             File oldWorld = Utils.join("byow/Core", "save.txt");
             if (!oldWorld.exists() || oldWorld.length() == 0) {
